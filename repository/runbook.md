@@ -1,5 +1,5 @@
-## CI/CD Pipeline Automation Project Using AWS Native SDLC Tools
-![CompleteAWSNativeCICDProject!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/project_gradle_cloudnative_cicd_arch.png)
+# CI/CD Pipeline Project Using AWS Native SDLC Automation Tools
+![CompleteAWSNativeCICDProject!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/aws_native_project_v2.2.png)
 
 ###### Project ToolBox 🧰
 - [CodeCommit](https://aws.amazon.com/codecommit/) CodeCommit is a secure, highly scalable, fully managed source control service that hosts private Git repositories.
@@ -23,14 +23,14 @@ b) You must Login as an IAM User before you can complete the below steps success
 - Click on `Create Repository`
 - Name your repository `AWS-Native-CICD-Pipeline-Project`
 - Click `Create`
-![CodeCommit!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/dsbfdsbbfdf.png)
+![CodeCommit!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-03%20at%206.11.38%20PM.png)
 
 1.2) Configure SSH Connection On Local MacOs or Windows With CodeCommit
 - Follow the steps provided in the Runbook below
 - Runbook: https://docs.google.com/document/d/1vDu6TBcIrh2NbUtv5eayur1Cdo3Z8X5YSZ9t58ItlXo/edit?usp=sharing
 
 1.3) Download the Project Zip Code From The Below Repository Link
-- Project Code: https://github.com/awanmbandi/realworld-cicd-pipeline-project/tree/advanced-aws-native-cicd-project-two
+- Project Code: https://github.com/awanmbandi/realworld-cicd-pipeline-project/tree/aws-native-cicd-pipeline-project
 - Unzip and Copy everything to the Code Commit Repository you just cloned
 - Push the Code Upstream to Your CodeCommit Project Repository and Confirm you have everything in the Repository 
 - NOTE: Use the same Git commands you have always used to Push code to GitHub
@@ -63,21 +63,6 @@ b) You must Login as an IAM User before you can complete the below steps success
         - Role Name: `AWS-CodeDeploy-Deployment-Role`
         - Click `Create`
 
-## 3.2) Create An EC2 IAM Profile/Role
-- Create an EC2 Service Role in IAM with Admin Privileges
-- Navigate to IAM
-![IAM!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-03%20at%206.20.44%20PM.png)
-    - Click on `Roles`
-    - Click on `Create Role`
-    - Select `Service Role`
-    - Use Case: Select `EC2`
-    - Click on `Next` 
-    - Attach Policy: `AdministratorAccess` and `CloudWatchAgentServerPolicy`
-    - Click `Next` 
-    - Role Name: `AWS-EC2-Administrator-Role`
-    - Click `Create`
-    **NOTE:** There's no need to create if you already have one
-
 ## 4) Create An S3 Bucket Where The Build Artifact Will Be Stored
 - Navigate to Amazon S3
 ![S3!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-03%20at%206.15.44%20PM.png)
@@ -96,7 +81,7 @@ A) Sign up for SonarCloud using this URL: https://sonarcloud.io or https://sonar
 - Click on `“Authorize SonarCloud”`
     - **NOTE:** Once you Authorize SonarCloud, It’ll take you directly to Dashboard (Similar to Traditional SonarQube Server Dashboard but this is cloud based)
 
-B) We have to Generate a Token which CodeBuild will use during the Gradle Execution
+B) We have to Generate a Token which CodeBuild will use during the Maven Execution
 ![SonarCloud2!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-06%20at%201.03.17%20PM.png)
 - Click on your Profile at the Top right and click on `My Account`
 - Click on `Security`
@@ -123,7 +108,96 @@ D) Create a SonarCloud Project
     - Click on `Create Project`
 **NOTE** **Save your `Project Name` as well on Notepad, Save your `Organization name` and the Sonarcloud url (`https://sonarcloud.io`). Make sure your `Token` has been saved also.
 
-## 6) Create The Project Build Job in CodeBuild
+## 6) Create & Configure CodeArtifact Repository to Store and Manage All Application Maven Dependencies.
+### A) Create CodeArtifact Project Repository
+* Navigate to AWS `CodeArtifact` 
+* Click on `Repository`
+    * Click `Create Repositoy`
+![CodeArtifact!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-08%20at%2011.55.53%20PM.png)
+  * Repository Name: `java-webapp-maven-repo`
+  * Public Upstream Repository: Select `maven-central-store`
+  * Click on `Next`
+    * AWS Account: Select `This AWS Account`
+    * Domain Name: `java-webapp-maven-repo`
+    * Click on `Next`
+    * Click `Create Repository`
+  * **NOTE:** Verify and Confirm both the `Repository` and the `Repository Domain` were created successfully
+![CodeArtifact!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-09%20at%2012.13.04%20AM.png)
+
+### B) Configure Your CodeArtifact Project Repository With Maven POM.xml and Settings.xml
+  * Click on `Repositories` if you’ve not already
+    * Click on `maven-central-store`
+    * Click on `View Connection Instructions`
+    ![CodeArtifact!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-09%20at%2012.45.21%20AM.png)
+      * **Step 1:** Choose a package manager client: "Select (on the drop down):" `mvn`
+      * **Step 3:** **COPY** and Run The `export` Command on your Local Terminal where `awscli` is installed
+        * *NOTE:NOTE:NOTE:NOTE!!* 
+        - The command will look like this 
+        - BUT COPY YOUR OWN
+        - Make sure your AWSCLI is configured (with a user with "Admin Priviledges")
+        ```bash
+        export CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain java-webapp-maven-repo --domain-owner 213424289791 --region us-east-1 --query authorizationToken --output text`
+        ```
+        - Also RUN: `echo $CODEARTIFACT_AUTH_TOKEN`
+        * *NOTE:NOTE:*
+            - Copy the `CODEARTIFACT_AUTH_TOKEN` Encrypted Credential and `SAVE` on your `NOTEPAD/Somewhere`
+            - We’re going to store this Token in SSM Parameter Store from where our CodeBuild Job is going pick it up
+        ![CodeArtifact!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-09%20at%2012.59.21%20AM.png)
+
+### B.1) Update the Settings.xml File With CodeArtifact Repository Configurations
+  * Still on `“View Connection Instructions”` in `maven-central-store`
+  ![CodeArtifact!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-09%20at%2012.51.13%20AM.png)
+  * Under Step 5: 
+    - `COPY` the Repository `id` and Paste it in the `settings.xml` file on `line 29` at the time of this
+    - `COPY` the Repository `url` and Paste on `Line 18` and `Line 30` in the `settings.xml` at the time of this
+    - `SAVE` the changes made in the file
+    ![CodeArtifact!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-09%20at%2012.54.34%20AM.png)
+
+### B.2) Update the POM.xml File With CodeArtifact Repository Configurations
+  * Still on `“View Connection Instructions”` in `maven-central-store`
+  ![CodeArtifact!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-09%20at%2012.51.13%20AM.png)
+  * Under Step 5: 
+    - `COPY` the Repository `id` and Paste it in the `POM.xml` file on `Line 75` at the time of this
+    - `COPY` the Repository `url` and Paste on `Line 76` in the `POM.xml` at the time of this
+    - `SAVE` the changes made in the file
+    - `COMMIT` the changes and `PUSH` to UpStream to `CodeCommit`
+    ![CodeArtifact!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-09%20at%201.03.00%20AM.png)
+
+## 7) Store Your AWS CodeArtifact & SonarCloud Project Parameters/Values In SSM Parameter Store
+- Navigate to SSM
+- **NOTE!!** Make sure you create the parameters in the same Region as the bucket (same for all project resources)
+![ssmps!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-06%20at%201.18.36%20PM.png)
+- **a)** Click on `Parameter Store`
+  - Click on `Create Parameter`
+  - Name: `CODEARTIFACT_AUTH_TOKEN`
+  - Type: Select `Secure/String`
+  - Value: `provide your CodeArtifact Token` the one you copied when you ran `echo $CODEARTIFACT_AUTH_TOKEN`
+
+- **a)** Click on `Parameter Store`
+  - Click on `Create Parameter`
+  - Name: `Organization`
+  - Type: Select `String`
+  - Value: `provide your SnarCloud Org name`
+
+- **b)** Click on `Parameter Store`
+  - Name: `HOST`
+  - Type: Select `String`
+  - Value: https://sonarcloud.io
+
+- **c)** Click on `Parameter Store`
+  - Name: `Project`
+  - Type: Select `String`
+  - Value: `provide your SonaCloud Project name`
+
+- **d)** Click on `Parameter Store`
+  - Name: `sonartoken`
+  - Type: Select `Secure/String`
+  - Value: `provide your SonaCloud Project Token`
+**NOTE:** Confirm that these same parameter names exist in your `sonacloud_buildspec.yaml` configuration.
+#### 7.1) Confirm That Have All Required Parameters Created With Their Respective Values
+![ssmps!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-09%20at%2010.32.08%20AM.png)
+
+## 8) Create The Project Build Job in CodeBuild
 - Navigate To The AWS `CodeBuild` Service
 ![CodeBuild!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-03%20at%206.17.16%20PM.png)
 - Click on `Create Build Project` 
@@ -131,9 +205,9 @@ D) Create a SonarCloud Project
     - Source Provider: Select `AWS CodeCommit`
     - Repository: Select `AWS-Native-CICD-Pipeline-Project`
     - Branch: `master`
-    - Operating System: `Amazon Linux 2`
+    - Operating System: `Ubuntu`
     - Runtime: `Standard`
-    - Image: MUST USE  (`aws/codebuild/amazonlinux2-x86_64-standard:corretto11`) or else it’ll BREAK
+    - Image: MUST USE  (`aws/codebuild/standard:5.0`) or else it’ll BREAK
     - Image version: Select `Always use the latest for this runtime version` 
     - Environment type: Select `Linux EC2`
     - Service Role: `Existing Service Role`
@@ -149,9 +223,8 @@ D) Create a SonarCloud Project
         - Group Name: `Java-Webapp-CodeBuild-Project-Logs`
         - Stream name: `Java-Webapp-CodeBuild-Build-Logs`
     - CLICK: Click `CREATE BUILD PROJECT`
-    - CLICK on `Start Build` to `TEST` your Build Job
 
-## 7) Create The SonarCloud Code Analysis Job in CodeBuild
+## 9) Create The SonarCloud Code Analysis Job in CodeBuild
 - Navigate To The AWS `CodeBuild` Service
 ![CodeBuild!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/patisdsd_dah_sada.png)
 - Click on `Create Build Project` 
@@ -159,9 +232,9 @@ D) Create a SonarCloud Project
     - Source Provider: Select `AWS CodeCommit`
     - Repository: Select `AWS-Native-CICD-Pipeline-Project`
     - Branch: `master`
-    - Operating System: `Amazon Linux 2`
+    - Operating System: `Ubuntu`
     - Runtime: `Standard`
-    - Image: MUST USE  (`aws/codebuild/amazonlinux2-x86_64-standard:corretto11`) or else it’ll BREAK
+    - Image: MUST USE  (`aws/codebuild/standard:5.0`) or else it’ll BREAK
     - Image version: Select `Always use the latest for this runtime version` 
     - Environment type: Select `Linux EC2`
     - Service Role: `Existing Service Role`
@@ -175,10 +248,9 @@ D) Create a SonarCloud Project
         - Group Name: `Java-Webapp-CodeBuild-Project-Logs`
         - Stream name: `Java-Webapp-CodeBuild-SonarCloud-Logs`
     - CLICK: Click `CREATE BUILD PROJECT`
-    - CLICK on `Start Build` to `TEST` your SonaCloud Test Job
 ![CodeBuild!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-09%20at%2012.04.26%20PM.png)
 
-## 8) Create Staging Deployment Area/Environment
+## 10) Create Staging Deployment Area/Environment
 - Navigate to EC2
 ![EC2!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-03%20at%206.34.34%20PM.png)
 - Click `Launch Instances`
@@ -218,7 +290,7 @@ D) Create a SonarCloud Project
 
         - Click `Launch Instance`
 
-## 9) Create Production Deployment Area/Environment
+## 11) Create Production Deployment Area/Environment
 ![EC2!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-03%20at%206.34.34%20PM.png)
 - Navigate to EC2
 - Click `Launch Instances`
@@ -255,10 +327,10 @@ D) Create a SonarCloud Project
         ```
 
         - Click `Launch Instance`
-#### 10.1) Confirm that you have both the Stage and Prod Environments
+#### 11.1) Confirm that you have both the Stage and Prod Environments
 ![Stage&ProdInstances!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-09%20at%2010.25.51%20AM.png)
 
-## 11) Create CodeDeploy Application
+## 12) Create CodeDeploy Application
 - Navigate to CodeDeploy
 ![CDApp!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-03%20at%205.11.57%20PM.png)
 - Click on `Applications`
@@ -267,7 +339,7 @@ D) Create a SonarCloud Project
         - Compute Platform: `EC2/On-premises`
         - Click `Create Application`
 
-## 12) Create A CodeDeploy Deployment Group To Deploy Staging Env
+## 13) Create A CodeDeploy Deployment Group To Deploy Staging Env
 - Navigate to CodeDeploy
 ![CDApp!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-03%20at%206.26.42%20PM.png)
 - Click on `Applications`
@@ -286,7 +358,7 @@ D) Create a SonarCloud Project
         - Load balancer: Uncheck the box to `Disable`
         - Click `Create deployment group`
 
-## 13) Create A CodeDeploy Deployment Group For The Production Env
+## 14) Create A CodeDeploy Deployment Group For The Production Env
 - Navigate to CodeDeploy
 ![CDApp!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-03%20at%206.26.42%20PM.png)
 - Click on `Applications`
@@ -305,7 +377,7 @@ D) Create a SonarCloud Project
         - Load balancer: Uncheck the box to `Disable`
         - Click `Create deployment group`
 
-## 14) Create The CI/CD Automation Pipeline With CodePipeline
+## 15) Create The CI/CD Automation Pipeline With CodePipeline
 - Navigate to `CodePipeline`
 ![CP!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Pipeline.png)
 - Click on `Create Pipeline`
@@ -338,7 +410,7 @@ D) Create a SonarCloud Project
     - NOTE: Once you create the pipeline, it'll start Running Immediate. Just wait for all the various stages to complete
     - **NOTE2:** The Deployment Will Only Take Place In The Staging Environment (With Continuous Deployment)
 
-## 15) Add The SAST Test Stage With SonarCloud
+## 16) Add The SAST Test Stage With SonarCloud
 ![EditPipeline!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/dsdsdsdsd.png)
 - Click on `Edit` to add the following Pipeline Stages;
     - The `Testing Stage`
@@ -359,7 +431,7 @@ D) Create a SonarCloud Project
 
   - Click on `Done` again
 
-## 16) Add The Manual Approval Stage (To Achieve Continuous Delivery To Production)
+## 17) Add The Manual Approval Stage (To Achieve Continuous Delivery To Production)
 - Click on `Add stage`
 ![AddMA!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-07%20at%202.07.16%20PM.png)
 - Stage name: `Manual-Approval`
@@ -372,7 +444,7 @@ D) Create a SonarCloud Project
 
   - Click on `Done` again
 
-## 17) Add The Deploy To Production Stage With CodeDeploy
+## 18) Add The Deploy To Production Stage With CodeDeploy
 - Click on `Add stage`
 ![DeployProd!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-06%20at%202.10.51%20PM.png)
 - Stage name: `Deploy-Prod`
@@ -389,11 +461,11 @@ D) Create a SonarCloud Project
   - `SCROLL UP` and Click on `SAVE`
   - Click `SAVE`
 
-### 18) RE-RUN YOUR PIPELINE and CONFIRM THE APP IS AVAILABLE IN STAGING ENV BEFORE APPROVING PRODUCTION
+### 19) RE-RUN YOUR PIPELINE and CONFIRM THE APP IS AVAILABLE IN STAGING ENV BEFORE APPROVING PRODUCTION
 - CLICK on `Release Change`
 ![ReRunPipeline!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-09%20at%2012.45.43%20PM.png)
 
-#### 18.1) Test To The Application Running In The Staging Environment
+#### 19.1) Test To The Application Running In The Staging Environment
 * Navigate to EC2 
 * Copy the Public IP Addresses of the `Stage Instance` and Try Accessing the Application
 * URL: http://INSTANCE_PUBLIC_IP:8080/javawebapp 
@@ -404,28 +476,36 @@ D) Create a SonarCloud Project
 - You Then `APPROVE PROD` Deployment
 ![SuccessPipeResults!](https://lucid.app/publicSegments/view/747b2c4f-4f8b-4e1b-b83e-377c91a09cd8/image.png)
 
-### 19) REVIEW ALL JOBS (Whle The Pipeline Is Running)
+### 20) REVIEW ALL JOBS (Whle The Pipeline Is Running)
+- Go through the *`CodeArtifact Downloaded Dependencies`*
 - Go through the *`CodeBuild Build & Test Job Outputs`*
 - Go through the *`CodeDeploy Stage & Prod Prod Deployment Results`*
 - Go through the *`SonarCloud Project/Analysis` etc*
 
-#### 19A) CodeBuild Build Job Results
+#### 20A) CodeArtifact Maven Project Repository
+i) CodeArtifact `maven-central-store` (These Dependencies Where All Downloaded From `Maven Central` and Stored Here)
+![CodeArtifact!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-09%20at%203.35.20%20AM.png)
+
+ii) CodeBuild Project Logs (Build and Test Jobs)
+![CodeArtifact!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-09%20at%2012.58.45%20PM.png)
+
+#### 20B) CodeBuild Build Job Results
 ![CodeBuildBuildJob!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-09%20at%203.12.18%20AM.png)
 
-#### 19B) CodeBuild SonaCloud SAST Job Results
+#### 20C) CodeBuild SonaCloud SAST Job Results
 ![CodeBuildSASTJob!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-09%20at%203.17.50%20AM.png)
 
-#### 19C) SonaCloud SAST Test Results
+#### 20D) SonaCloud SAST Test Results
 ![CodeBuildSASTtestResults!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-09%20at%203.21.56%20AM.png)
 
-#### 19D) CodeDeploy Deployment Results (Stage&Prod)
+#### 20E) CodeDeploy Deployment Results (Stage&Prod)
 - Navigate to `CodeDeploy`
 ![CodeDeploy!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-09%20at%203.28.15%20AM.png)
 
-### 20) CONFIRM THAT THE APPLICATION VALIDATE TEST PASSED
+### 21) CONFIRM THAT THE APPLICATION VALIDATE TEST PASSED
 ![CodeDeploy!](https://github.com/awanmbandi/realworld-cicd-pipeline-project/blob/zdocs/images/Screen%20Shot%202023-10-09%20at%209.26.28%20AM.png)
 
-### 21) TEST ACCESS TO THE APPLICATION
+### 22) TEST ACCESS TO THE APPLICATION
 * Navigate to EC2 
 * Copy the Public IP Addresses of the Instances and Try Accessing the Application
 * URL: http://INSTANCE_PUBLIC_IP:8080/javawebapp 
